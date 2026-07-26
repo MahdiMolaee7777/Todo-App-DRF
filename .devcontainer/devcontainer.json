@@ -1,0 +1,58 @@
+{
+  "name": "Django Todo App Api",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "web",
+  "workspaceFolder": "/app",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "batisteo.vscode-django",
+        "wholroyd.jinja",
+        "ms-azuretools.vscode-docker",
+        "humao.rest-client"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.linting.flake8Enabled": true,
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+          }
+        },
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/*.pyc": true
+        },
+        "files.watcherExclude": {
+          "**/__pycache__/**": true,
+          "**/staticfiles/**": true,
+          "**/media/**": true
+        }
+      }
+    }
+  },
+
+  "forwardPorts": [8000,5432],
+
+  "postCreateCommand": "echo 'Container آماده است!'",
+
+  "remoteUser": "root",
+
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  "runArgs": ["--init"],
+
+  "shutdownAction": "stopCompose"
+}
