@@ -7,6 +7,9 @@ from .serializers import RegisterSerializer,UserSerializer,LoginSerializer,Updat
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status
+
 
  
 
@@ -15,7 +18,45 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
 class LoginView(TokenObtainPairView):
+
     serializer_class = LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        tokens = serializer.validated_data
+
+        response = Response(
+            {
+                "detail": "Login successful"
+            },
+            status=status.HTTP_200_OK
+        )
+
+        response.set_cookie(
+            key="access_token",
+            value=tokens["access"],
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+        )
+
+        response.set_cookie(
+            key="refresh_token",
+            value=tokens["refresh"],
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+        )
+
+        return response
 
 
 
@@ -68,18 +109,38 @@ class ChangePasswordView(APIView):
     request=LogoutSerializer,
     responses={200: None},
 )
+
+
+
+
+
+
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = LogoutSerializer(
-            data=request.data
-        )
 
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        try:
+            refresh_token = request.COOKIES.get("refresh_token")
 
-        return Response(
-            {"detail": "Successfully logged out."},
-            status=status.HTTP_200_OK,
-        )
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            response = Response(
+                {"detail": "Logout successful."},
+                status=status.HTTP_205_RESET_CONTENT,
+            )
+
+            response.delete_cookie("access_token")
+            response.delete_cookie("refresh_token")
+
+            return response
+
+        except Exception:
+            return Response(
+                {"detail": "Invalid token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
