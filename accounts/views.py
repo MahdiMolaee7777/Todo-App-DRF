@@ -1,14 +1,15 @@
 from rest_framework import generics,status
 from rest_framework.response import Response
-from .serializers import ChangePasswordSerializer,LogoutSerializer
 from rest_framework.permissions import IsAuthenticated
 from .models import User
-from .serializers import RegisterSerializer,UserSerializer,LoginSerializer,UpdateProfileSerializer
+from .serializers import RegisterSerializer,UserSerializer,LoginSerializer,UpdateProfileSerializer, ProfileSerializer , ChangePasswordSerializer,LogoutSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 
  
@@ -16,6 +17,8 @@ from rest_framework import status
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
+
+
 
 class LoginView(TokenObtainPairView):
 
@@ -35,16 +38,17 @@ class LoginView(TokenObtainPairView):
 
         response = Response(
             {
-                "detail": "Login successful"
+                "detail": "Login successful.",
+                "user": tokens["user"],
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
         response.set_cookie(
             key="access_token",
             value=tokens["access"],
             httponly=True,
-            secure=False,
+            secure=False,      # بعداً در Production -> True
             samesite="Lax",
         )
 
@@ -76,10 +80,18 @@ class MeView(generics.RetrieveUpdateAPIView):
     request=ChangePasswordSerializer,
     responses={200: None},
 )
+
+
+
 class ChangePasswordView(APIView):
-    permission_classes = [IsAuthenticated]
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
 
     def post(self, request):
+
         serializer = ChangePasswordSerializer(
             data=request.data,
             context={
@@ -87,9 +99,11 @@ class ChangePasswordView(APIView):
             }
         )
 
+
         serializer.is_valid(
             raise_exception=True
         )
+
 
         request.user.set_password(
             serializer.validated_data["new_password"]
@@ -97,12 +111,42 @@ class ChangePasswordView(APIView):
 
         request.user.save()
 
-        return Response(
-            {
-                "detail": "Password changed successfully."
-            },
-            status=status.HTTP_200_OK,
+
+        refresh_token = request.COOKIES.get(
+            "refresh_token"
         )
+
+
+        if refresh_token:
+
+            token = RefreshToken(
+                refresh_token
+            )
+
+            token.blacklist()
+
+
+
+        response = Response(
+            {
+                "detail": "Password changed successfully. Please login again."
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+        response.delete_cookie(
+            "access_token"
+        )
+
+        response.delete_cookie(
+            "refresh_token"
+        )
+
+       
+
+
+        return response
     
 
 @extend_schema(
@@ -144,3 +188,46 @@ class LogoutView(APIView):
             )
 
 
+
+
+
+class UserInfoAPIView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+
+    def get(self, request):
+
+        user = request.user
+
+
+        return Response({
+
+
+            "email": user.email,
+
+            "first_name": user.first_name,
+
+            "last_name": user.last_name,
+
+        })
+
+
+
+
+
+class ProfileView(generics.RetrieveUpdateAPIView):
+
+    serializer_class = ProfileSerializer
+
+    permission_classes = [IsAuthenticated]
+
+    parser_classes = (
+        MultiPartParser,
+        FormParser,
+    )
+
+    def get_object(self):
+        return self.request.user
