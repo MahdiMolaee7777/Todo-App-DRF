@@ -4,6 +4,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
 
 from .models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -162,3 +165,31 @@ class ProfileSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "email"
         ]
+
+
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+
+        return value
+
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+
+    new_password = serializers.CharField(
+        write_only=True,
+        min_length=8,
+        required=True,
+    )
+
+
+    def validate_new_password(self, value):
+
+        validate_password(value)
+
+        return value

@@ -19,16 +19,21 @@ def TodoUpdatePageView(request, pk):
 
     return render(request,"todos/todo_edit_form.html",{"todo_id": pk,})
 
-from django.shortcuts import render
-
 
 def profile_page(request):
 
     return render(request,"accounts/profile.html")
 
-from django.shortcuts import render
-
 
 def change_password_page(request):
 
     return render(request,"accounts/change_password.html")
+
+def forgot_password_page(request):
+
+    return render(request,"accounts/forgot_password.html",)
+
+
+def reset_password_page(request, uid, token):
+
+    return render(request,"accounts/reset_password.html",{"uid": uid,"token": token,})
