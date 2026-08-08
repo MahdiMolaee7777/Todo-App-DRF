@@ -9,7 +9,10 @@ from .views import (
     profile_page,
     change_password_page,
     forgot_password_page,
-    reset_password_page
+    reset_password_page,
+    verify_email_sent_page,
+    verify_success_page,
+    verify_failed_page
 )
 
 app_name = "pages"
@@ -35,6 +38,12 @@ urlpatterns = [
     path("forgot-password/",forgot_password_page,name="forgot-password",),
 
     path("reset-password/<int:uid>/<str:token>/",reset_password_page,name="reset-password",),
+
+    path("verify-email-sent/",verify_email_sent_page,name="verify-email-sent",),
+
+    path("verify-success/",verify_success_page,name="verify-success",),
+
+    path("verify-failed/",verify_failed_page,name="verify-failed",),
 
 ]
 

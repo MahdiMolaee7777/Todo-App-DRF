@@ -5,6 +5,8 @@ from django.contrib.auth.password_validation import validate_password
 
 from .models import User
 from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate
+from rest_framework.exceptions import AuthenticationFailed
 
 User = get_user_model()
 
@@ -33,7 +35,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get("last_name", ""),
         )
 
-        user.is_active = True
+        user.is_active = False
         user.save()
 
         return user
@@ -66,8 +68,27 @@ class LoginSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         return super().get_token(user)
 
-
     def validate(self, attrs):
+
+        email = attrs.get("email")
+
+        user = User.objects.filter(
+            email=email
+        ).first()
+
+        if user is None:
+            raise AuthenticationFailed(
+                "Invalid email or password."
+            )
+
+        if user and not user.is_active:
+
+            raise AuthenticationFailed(
+                {
+                    "code": "email_not_verified",
+                    "detail": "Email is not verified. Please check your inbox."
+                }
+            )
 
         data = super().validate(attrs)
 
@@ -76,7 +97,6 @@ class LoginSerializer(TokenObtainPairSerializer):
         ).data
 
         return data
-
 
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
@@ -193,3 +213,8 @@ class ResetPasswordSerializer(serializers.Serializer):
         validate_password(value)
 
         return value
+
+
+class ResendVerificationSerializer(serializers.Serializer):
+
+    email = serializers.EmailField()

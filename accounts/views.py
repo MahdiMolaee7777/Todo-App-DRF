@@ -2,28 +2,103 @@ from rest_framework import generics,status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import User
-from .serializers import RegisterSerializer,UserSerializer,LoginSerializer,UpdateProfileSerializer, ProfileSerializer , ChangePasswordSerializer,LogoutSerializer,ForgotPasswordSerializer,ResetPasswordSerializer
+from .serializers import RegisterSerializer,UserSerializer,LoginSerializer,UpdateProfileSerializer, ProfileSerializer , ChangePasswordSerializer,LogoutSerializer,ForgotPasswordSerializer,ResetPasswordSerializer,ResendVerificationSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404,redirect
+from .services import send_password_reset_email
+from .services import send_verification_email
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.views import TokenRefreshView
 
 
 
- 
+
+
 
 class RegisterView(generics.CreateAPIView):
+
     queryset = User.objects.all()
+
     serializer_class = RegisterSerializer
 
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        user = serializer.save()
+
+
+        # ارسال ایمیل تایید
+        send_verification_email(
+            request,
+            user
+        )
+
+
+        return Response(
+            {
+                "detail": "Registration successful. Please verify your email.",
+                "redirect_url": reverse("pages:verify-email-sent"),
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+class VerifyEmailView(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, uid, token):
+
+        print("VERIFY UID:", uid)
+        print("VERIFY TOKEN:", token)
+
+
+        user = get_object_or_404(
+            User,
+            id=uid
+        )
+
+
+        print("VERIFY USER:", user.email)
+
+
+        if not PasswordResetTokenGenerator().check_token(
+            user,
+            token
+        ):
+            print("TOKEN INVALID")
+
+            return Response(
+                {
+                    "detail": "Invalid or expired token."
+                },
+                status=400
+            )
+
+
+        user.is_active = True
+        user.save()
+
+
+        return redirect(
+            "pages:verify-success"
+        )
 
 
 class LoginView(TokenObtainPairView):
@@ -68,6 +143,90 @@ class LoginView(TokenObtainPairView):
 
         return response
 
+
+class RefreshTokenView(TokenRefreshView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+
+        refresh_token = request.COOKIES.get(
+            "refresh_token"
+        )
+
+        if not refresh_token:
+            return Response(
+                {
+                    "detail": "Refresh token not found."
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # TokenRefreshView expects the refresh token
+        # inside request.data
+        request.data["refresh"] = refresh_token
+
+        try:
+
+            serializer = self.get_serializer(
+                data=request.data
+            )
+
+            serializer.is_valid(
+                raise_exception=True
+            )
+
+            data = serializer.validated_data
+
+            response = Response(
+                {
+                    "detail":
+                    "Token refreshed successfully."
+                },
+                status=status.HTTP_200_OK
+            )
+
+            response.set_cookie(
+                key="access_token",
+                value=data["access"],
+                httponly=True,
+                secure=False,
+                samesite="Lax",
+            )
+
+            # Because ROTATE_REFRESH_TOKENS=True
+            if "refresh" in data:
+
+                response.set_cookie(
+                    key="refresh_token",
+                    value=data["refresh"],
+                    httponly=True,
+                    secure=False,
+                    samesite="Lax",
+                )
+
+            return response
+
+        except Exception:
+
+            response = Response(
+                {
+                    "detail":
+                    "Invalid or expired refresh token."
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+            response.delete_cookie(
+                "access_token"
+            )
+
+            response.delete_cookie(
+                "refresh_token"
+            )
+
+            return response
 
 
 class MeView(generics.RetrieveUpdateAPIView):
@@ -248,70 +407,35 @@ class ForgotPasswordView(APIView):
     authentication_classes = []
     permission_classes = []
 
+
     def post(self, request):
 
         serializer = ForgotPasswordSerializer(
             data=request.data
         )
 
+
         serializer.is_valid(
             raise_exception=True
         )
 
+
         email = serializer.validated_data["email"]
+
 
         user = User.objects.filter(
             email=email
         ).first()
 
 
+
         if user:
 
-            token = PasswordResetTokenGenerator().make_token(
+            send_password_reset_email(
+                request,
                 user
             )
 
-
-            uid = user.pk
-
-
-
-            reset_path = reverse(
-                "pages:reset-password",
-                kwargs={
-                    "uid": uid,
-                    "token": token,
-                }
-            )
-
-
-            link = request.build_absolute_uri(
-                reset_path
-            )
-
-
-
-            send_mail(
-
-                subject="Reset Password",
-
-                message=f"""
-Hello {user.first_name or user.email}
-
-Click the link below to reset your password:
-
-{link}
-""",
-
-                from_email=settings.DEFAULT_FROM_EMAIL,
-
-                recipient_list=[
-                    user.email
-                ],
-
-                fail_silently=False,
-
-            )
 
 
         return Response(
@@ -324,7 +448,6 @@ Click the link below to reset your password:
             status=status.HTTP_200_OK,
 
         )
-
 
 class ResetPasswordView(APIView):
 
@@ -379,6 +502,49 @@ class ResetPasswordView(APIView):
             {
                 "detail":
                 "Password reset successful."
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+class ResendVerificationEmailView(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+
+    def post(self, request):
+
+        serializer = ResendVerificationSerializer(
+            data=request.data
+        )
+
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+
+        email = serializer.validated_data["email"]
+
+
+        user = User.objects.filter(
+            email=email
+        ).first()
+
+
+        if user and not user.is_active:
+
+            send_verification_email(
+                request,
+                user
+            )
+
+
+        return Response(
+            {
+                "detail":
+                "If this email exists and is not verified, a verification email has been sent."
             },
             status=status.HTTP_200_OK
         )

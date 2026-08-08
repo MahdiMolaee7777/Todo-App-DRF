@@ -37,3 +37,27 @@ def forgot_password_page(request):
 def reset_password_page(request, uid, token):
 
     return render(request,"accounts/reset_password.html",{"uid": uid,"token": token,})
+
+
+def verify_email_sent_page(request):
+
+    return render(
+        request,
+        "accounts/verify_email_sent.html",
+    )
+
+
+def verify_success_page(request):
+
+    return render(
+        request,
+        "accounts/verify_success.html",
+    )
+
+
+def verify_failed_page(request):
+
+    return render(
+        request,
+        "accounts/verify_failed.html",
+    )

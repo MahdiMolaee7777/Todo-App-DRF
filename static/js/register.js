@@ -114,12 +114,11 @@ async function registerUser(e) {
 
 
         alert(
-            "ثبت‌نام با موفقیت انجام شد."
+            "ثبت‌نام انجام شد. لطفاً ایمیل خود را برای تأیید حساب بررسی کنید."
         );
 
-
         window.location.href =
-            "/login/";
+            data.redirect_url;
 
 
 
