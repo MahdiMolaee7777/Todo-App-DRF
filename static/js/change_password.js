@@ -1,3 +1,4 @@
+
 console.log("CHANGE PASSWORD JS LOADED");
 
 
@@ -26,6 +27,10 @@ document.addEventListener(
 
 
 
+// ==============================
+// CHANGE PASSWORD
+// ==============================
+
 async function changePassword(e) {
 
     e.preventDefault();
@@ -38,19 +43,16 @@ async function changePassword(e) {
         ).value;
 
 
-
     const new_password =
         document.getElementById(
             "new_password"
         ).value;
 
 
-
     const confirm_password =
         document.getElementById(
             "confirm_password"
         ).value;
-
 
 
     const errorBox =
@@ -60,12 +62,20 @@ async function changePassword(e) {
 
 
 
+    // ==============================
+    // CHECK NEW PASSWORD
+    // ==============================
+
     if (
         new_password !== confirm_password
     ) {
 
-        errorBox.textContent =
-            "رمز جدید و تکرار آن یکسان نیست.";
+        if (errorBox) {
+
+            errorBox.textContent =
+                "رمز جدید و تکرار آن یکسان نیست.";
+
+        }
 
         return;
 
@@ -73,33 +83,26 @@ async function changePassword(e) {
 
 
 
-
+    // ==============================
+    // SEND REQUEST
+    // ==============================
 
     const response =
-        await fetch(
+        await apiRequest(
             "/api/accounts/change-password/",
             {
 
                 method: "POST",
 
-
                 headers: {
-
                     "Content-Type":
                         "application/json"
-
                 },
-
-
-                credentials: "include",
-
-
 
                 body: JSON.stringify({
 
                     old_password:
                         old_password,
-
 
                     new_password:
                         new_password
@@ -111,83 +114,88 @@ async function changePassword(e) {
 
 
 
+    console.log(
+        "CHANGE PASSWORD STATUS:",
+        response.status
+    );
+
+
 
     const data =
         await response.json();
 
 
 
+    console.log(
+        "CHANGE PASSWORD RESPONSE:",
+        data
+    );
 
+
+
+    // ==============================
+    // SUCCESS
+    // ==============================
 
     if (response.ok) {
-
-        
-
-        window.location.href="/todos/";
-
-        
-
-
-        // پاک کردن مقدار input ها
-        document
-            .getElementById("change-password-form")
-            .reset();
-
-
 
         alert(
             "رمز عبور با موفقیت تغییر کرد. دوباره وارد شوید."
         );
 
 
+        document
+            .getElementById(
+                "change-password-form"
+            )
+            .reset();
 
-        // کمی تاخیر برای جلوگیری از Password Manager
-        setTimeout(
-            () => {
 
-                window.location.href =
-                    "/login/";
+        window.location.href =
+            "/login/";
 
-            },
-            100
-        );
 
+        return;
 
     }
 
-    else {
 
 
-        console.log(data);
+    // ==============================
+    // ERROR
+    // ==============================
 
+    if (errorBox) {
 
+        if (data.old_password) {
 
-        if(errorBox){
+            errorBox.textContent =
+                data.old_password[0];
 
-            if(data.old_password){
+        }
 
-                errorBox.textContent =
-                    data.old_password[0];
+        else if (data.new_password) {
 
-            }
+            errorBox.textContent =
+                data.new_password[0];
 
-            else if(data.new_password){
+        }
 
-                errorBox.textContent =
-                    data.new_password[0];
+        else if (data.detail) {
 
-            }
+            errorBox.textContent =
+                data.detail;
 
-            else {
+        }
 
-                errorBox.textContent =
-                    "خطا در تغییر رمز عبور.";
+        else {
 
-            }
+            errorBox.textContent =
+                "خطا در تغییر رمز عبور.";
 
         }
 
     }
 
-
 }
+

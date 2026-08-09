@@ -5,134 +5,143 @@ document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-
         loadProfile();
 
 
-
         document
-        .getElementById("avatar")
-        ?.addEventListener(
-            "change",
-            previewAvatar
-        );
-
+            .getElementById("avatar")
+            ?.addEventListener(
+                "change",
+                previewAvatar
+            );
 
 
         document
-        .getElementById("save-profile")
-        ?.addEventListener(
-            "click",
-            updateProfile
-        );
-
+            .getElementById("save-profile")
+            ?.addEventListener(
+                "click",
+                updateProfile
+            );
 
     }
 );
 
 
 
+// ==============================
+// LOAD PROFILE
+// ==============================
 
+async function loadProfile() {
 
-async function loadProfile(){
+    console.log("Loading profile...");
 
 
     const response =
-        await fetch(
-            "/api/accounts/profile/",
-            {
-                credentials:"include"
-            }
+        await apiRequest(
+            "/api/accounts/profile/"
         );
 
 
+    console.log(
+        "PROFILE STATUS:",
+        response.status
+    );
 
-    if(!response.ok){
 
-        alert("خطا در دریافت اطلاعات");
+    if (!response.ok) {
+
+        console.log(
+            "PROFILE LOAD ERROR"
+        );
+
+        alert(
+            "خطا در دریافت اطلاعات"
+        );
 
         return;
 
     }
-
 
 
     const user =
         await response.json();
 
 
+    console.log(
+        "PROFILE DATA:",
+        user
+    );
+
+
 
     document
-    .getElementById("email")
-    .value =
+        .getElementById("email")
+        .value =
         user.email || "";
 
 
-
     document
-    .getElementById("first_name")
-    .value =
+        .getElementById("first_name")
+        .value =
         user.first_name || "";
 
 
-
     document
-    .getElementById("last_name")
-    .value =
+        .getElementById("last_name")
+        .value =
         user.last_name || "";
 
 
-
     document
-    .getElementById("bio")
-    .value =
+        .getElementById("bio")
+        .value =
         user.bio || "";
 
 
 
-   const avatar =
-    document.getElementById("navbar-avatar");
+    // ==========================
+    // AVATAR
+    // ==========================
+
+    const avatarPreview =
+        document.getElementById(
+            "avatar-preview"
+        );
 
 
-    if(user.avatar){
+    if (
+        avatarPreview &&
+        user.avatar
+    ) {
 
-        avatar.src = user.avatar;
+        avatarPreview.src =
+            user.avatar;
 
     }
-    else{
-
-        avatar.src =
-        "https://ui-avatars.com/api/?name="
-        + user.first_name;
-
-    }
-
-
 
 }
 
 
 
+// ==============================
+// AVATAR PREVIEW
+// ==============================
 
-
-
-
-function previewAvatar(e){
-
+function previewAvatar(e) {
 
     const file =
         e.target.files[0];
 
 
-
-    if(!file){
+    if (!file) {
 
         return;
 
     }
 
 
-
+    
     const image =
         document.getElementById(
             "avatar-preview"
@@ -143,21 +152,19 @@ function previewAvatar(e){
     image.src =
         URL.createObjectURL(file);
 
-
-
 }
 
 
 
+// ==============================
+// UPDATE PROFILE
+// ==============================
 
+async function updateProfile() {
 
-
-
-
-
-
-async function updateProfile(){
-
+    console.log(
+        "Updating profile..."
+    );
 
 
     const formData =
@@ -167,12 +174,11 @@ async function updateProfile(){
 
     const avatar =
         document
-        .getElementById("avatar")
-        .files[0];
+            .getElementById("avatar")
+            .files[0];
 
 
-
-    if(avatar){
+    if (avatar) {
 
         formData.append(
             "avatar",
@@ -186,48 +192,44 @@ async function updateProfile(){
     formData.append(
         "first_name",
         document
-        .getElementById("first_name")
-        .value
+            .getElementById("first_name")
+            .value
     );
-
 
 
     formData.append(
         "last_name",
         document
-        .getElementById("last_name")
-        .value
+            .getElementById("last_name")
+            .value
     );
-
 
 
     formData.append(
         "bio",
         document
-        .getElementById("bio")
-        .value
+            .getElementById("bio")
+            .value
     );
 
 
 
-
-
     const response =
-        await fetch(
+        await apiRequest(
             "/api/accounts/profile/",
             {
+                method: "PATCH",
 
-                method:"PATCH",
-
-                credentials:"include",
-
-
-                body:formData
-
+                body: formData
             }
         );
 
 
+
+    console.log(
+        "PROFILE UPDATE STATUS:",
+        response.status
+    );
 
 
 
@@ -236,36 +238,36 @@ async function updateProfile(){
 
 
 
+    console.log(
+        "PROFILE UPDATE DATA:",
+        data
+    );
 
 
-    if(response.ok){
 
+    if (response.ok) {
 
         alert(
             "پروفایل با موفقیت ذخیره شد"
         );
 
 
-
         window.location.href =
             "/todos/";
 
-
     }
-    else{
+    else {
 
-
-        console.log(data);
+        console.log(
+            "PROFILE UPDATE ERROR:",
+            data
+        );
 
 
         alert(
             "خطا در ذخیره پروفایل"
         );
 
-
     }
-
-
-
 
 }

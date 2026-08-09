@@ -48,22 +48,10 @@ async function loadTodos(){
 
 
     const response =
-        await fetch(
-            url,
-            {
-                credentials:"include"
-            }
-        );
+        await apiRequest(url);
 
 
 
-    if(response.status === 401){
-
-        window.location.href="/login/";
-
-        return;
-
-    }
 
 
 
@@ -384,15 +372,15 @@ window.toggleTodo = async function(id){
 
 
     const response =
-        await fetch(
+        await apiRequest(
 
             `/api/todos/${id}/toggle/`,
 
             {
 
-                method:"POST",
+                method:"POST"
 
-                credentials:"include"
+               
 
             }
 
@@ -418,15 +406,15 @@ window.deleteTodo = async function(id){
 
 
     const response =
-        await fetch(
+        await apiRequest(
 
             `/api/todos/${id}/`,
 
             {
 
-                method:"DELETE",
+                method:"DELETE"
 
-                credentials:"include"
+               
 
             }
 
@@ -460,15 +448,9 @@ async function loadCategories(){
 
 
     const response =
-        await fetch(
+        await apiRequest(
 
-            "/api/categories/",
-
-            {
-
-                credentials:"include"
-
-            }
+            "/api/categories/"
 
         );
 
@@ -568,7 +550,7 @@ async function createTodo(e){
 
 
     const response =
-        await fetch(
+        await apiRequest(
 
             "/api/todos/",
 
@@ -583,8 +565,6 @@ async function createTodo(e){
 
                 },
 
-
-                credentials:"include",
 
 
                 body:JSON.stringify({
@@ -649,11 +629,9 @@ async function createTodo(e){
 async function loadUserInfo() {
 
     const response =
-        await fetch(
-            "/api/accounts/profile/",
-            {
-                credentials: "include"
-            }
+        await apiRequest(
+            "/api/accounts/profile/"
+           
         );
 
     if (!response.ok) {

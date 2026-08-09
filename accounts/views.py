@@ -23,6 +23,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 
 
+
 class RegisterView(generics.CreateAPIView):
 
     queryset = User.objects.all()
@@ -144,90 +145,61 @@ class LoginView(TokenObtainPairView):
         return response
 
 
-class RefreshTokenView(TokenRefreshView):
 
-    authentication_classes = []
-    permission_classes = []
+
+
+class RefreshView(TokenRefreshView):
 
     def post(self, request, *args, **kwargs):
 
-        refresh_token = request.COOKIES.get(
-            "refresh_token"
-        )
+        refresh_token = request.COOKIES.get("refresh_token")
 
         if not refresh_token:
             return Response(
-                {
-                    "detail": "Refresh token not found."
-                },
-                status=status.HTTP_401_UNAUTHORIZED
+                {"detail": "Refresh token not found."},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        # TokenRefreshView expects the refresh token
-        # inside request.data
-        request.data["refresh"] = refresh_token
+        serializer = self.get_serializer(
+            data={
+                "refresh": refresh_token
+            }
+        )
 
-        try:
+        serializer.is_valid(
+            raise_exception=True
+        )
 
-            serializer = self.get_serializer(
-                data=request.data
-            )
+        access_token = serializer.validated_data["access"]
 
-            serializer.is_valid(
-                raise_exception=True
-            )
+        new_refresh_token = serializer.validated_data.get("refresh")
 
-            data = serializer.validated_data
+        response = Response(
+            {
+                "detail": "Token refreshed successfully."
+            },
+            status=status.HTTP_200_OK,
+        )
 
-            response = Response(
-                {
-                    "detail":
-                    "Token refreshed successfully."
-                },
-                status=status.HTTP_200_OK
-            )
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+        )
+
+        if new_refresh_token:
 
             response.set_cookie(
-                key="access_token",
-                value=data["access"],
+                key="refresh_token",
+                value=new_refresh_token,
                 httponly=True,
                 secure=False,
                 samesite="Lax",
             )
 
-            # Because ROTATE_REFRESH_TOKENS=True
-            if "refresh" in data:
-
-                response.set_cookie(
-                    key="refresh_token",
-                    value=data["refresh"],
-                    httponly=True,
-                    secure=False,
-                    samesite="Lax",
-                )
-
-            return response
-
-        except Exception:
-
-            response = Response(
-                {
-                    "detail":
-                    "Invalid or expired refresh token."
-                },
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-            response.delete_cookie(
-                "access_token"
-            )
-
-            response.delete_cookie(
-                "refresh_token"
-            )
-
-            return response
-
+        return response
 
 class MeView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
