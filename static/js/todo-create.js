@@ -60,6 +60,36 @@ async function loadCategories(){
 
 }
 
+function jalaliToGregorian(jalaliDate) {
+
+    if (!jalaliDate) {
+        return null;
+    }
+
+    const parts = jalaliDate
+        .replace(/[۰-۹]/g, d =>
+            "۰۱۲۳۴۵۶۷۸۹".indexOf(d)
+        )
+        .split("/");
+
+    if (parts.length !== 3) {
+        return null;
+    }
+
+    const jy = Number(parts[0]);
+    const jm = Number(parts[1]);
+    const jd = Number(parts[2]);
+
+    const result =
+        jalaali.toGregorian(
+            jy,
+            jm,
+            jd
+        );
+
+    return `${result.gy}-${String(result.gm).padStart(2, "0")}-${String(result.gd).padStart(2, "0")}`;
+}
+
 
 
 
@@ -100,7 +130,9 @@ async function saveTodo(e){
 
 
                 due_date:
-                document.getElementById("due_date").value || null
+                    jalaliToGregorian(
+                        document.getElementById("due_date").value
+                    )
 
             })
 

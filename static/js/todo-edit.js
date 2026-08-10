@@ -60,10 +60,114 @@ document.addEventListener(
 );
 
 
+
 /*
-========================================
+================================================
+DATE CONVERSION
+================================================
+*/
+
+
+/*
+    Gregorian
+    2026-08-09
+
+    ↓
+
+    Jalali
+    1405/05/18
+*/
+function gregorianToJalali(
+    gregorianDate
+) {
+
+    if (!gregorianDate) {
+
+        return "";
+
+    }
+
+
+    const [
+        gy,
+        gm,
+        gd
+    ] =
+        gregorianDate
+            .split("-")
+            .map(Number);
+
+
+    const result =
+        jalaali.toJalaali(
+            gy,
+            gm,
+            gd
+        );
+
+
+    return (
+        `${result.jy}/` +
+        `${String(result.jm).padStart(2, "0")}/` +
+        `${String(result.jd).padStart(2, "0")}`
+    );
+
+}
+
+
+
+/*
+    Jalali
+    1405/05/18
+
+    ↓
+
+    Gregorian
+    2026-08-09
+*/
+function jalaliToGregorian(
+    jalaliDate
+) {
+
+    if (!jalaliDate) {
+
+        return "";
+
+    }
+
+
+    const [
+        jy,
+        jm,
+        jd
+    ] =
+        jalaliDate
+            .split("/")
+            .map(Number);
+
+
+    const result =
+        jalaali.toGregorian(
+            jy,
+            jm,
+            jd
+        );
+
+
+    return (
+        `${result.gy}-` +
+        `${String(result.gm).padStart(2, "0")}-` +
+        `${String(result.gd).padStart(2, "0")}`
+    );
+
+}
+
+
+
+/*
+================================================
 LOAD TODO
-========================================
+================================================
 */
 
 async function loadTodo() {
@@ -101,6 +205,7 @@ async function loadTodo() {
     }
 
 
+
     /*
     ========================================
     Title
@@ -119,6 +224,7 @@ async function loadTodo() {
             todo.title || "";
 
     }
+
 
 
     /*
@@ -141,6 +247,7 @@ async function loadTodo() {
     }
 
 
+
     /*
     ========================================
     Priority
@@ -161,6 +268,7 @@ async function loadTodo() {
     }
 
 
+
     /*
     ========================================
     Due Date
@@ -175,10 +283,39 @@ async function loadTodo() {
 
     if (dueDateInput) {
 
-        dueDateInput.value =
-            todo.due_date || "";
+        if (todo.due_date) {
+
+            const jalaliDate =
+                gregorianToJalali(
+                    todo.due_date
+                );
+
+
+            dueDateInput.value =
+                jalaliDate;
+
+
+            console.log(
+                "Gregorian:",
+                todo.due_date
+            );
+
+
+            console.log(
+                "Jalali:",
+                jalaliDate
+            );
+
+        }
+        else {
+
+            dueDateInput.value =
+                "";
+
+        }
 
     }
+
 
 
     /*
@@ -221,10 +358,11 @@ async function loadTodo() {
 }
 
 
+
 /*
-========================================
+================================================
 LOAD CATEGORIES
-========================================
+================================================
 */
 
 async function loadCategories() {
@@ -261,6 +399,7 @@ async function loadCategories() {
     }
 
 
+
     /*
     ========================================
     Handle DRF pagination
@@ -272,7 +411,8 @@ async function loadCategories() {
 
     if (Array.isArray(data)) {
 
-        categories = data;
+        categories =
+            data;
 
     }
     else if (
@@ -291,7 +431,9 @@ async function loadCategories() {
         );
 
         return;
+
     }
+
 
 
     /*
@@ -316,6 +458,7 @@ async function loadCategories() {
     }
 
 
+
     /*
     ========================================
     Clear old options
@@ -323,6 +466,7 @@ async function loadCategories() {
     */
 
     select.innerHTML = "";
+
 
 
     /*
@@ -347,6 +491,7 @@ async function loadCategories() {
     select.appendChild(
         emptyOption
     );
+
 
 
     /*
@@ -388,10 +533,11 @@ async function loadCategories() {
 }
 
 
+
 /*
-========================================
+================================================
 UPDATE TODO
-========================================
+================================================
 */
 
 async function updateTodo(e) {
@@ -404,6 +550,13 @@ async function updateTodo(e) {
         TODO_ID
     );
 
+
+
+    /*
+    ========================================
+    Get Form Values
+    ========================================
+    */
 
     const title =
         document.getElementById(
@@ -429,10 +582,43 @@ async function updateTodo(e) {
         ).value;
 
 
-    const dueDate =
+    const jalaliDueDate =
         document.getElementById(
             "due_date"
         ).value;
+
+
+
+    /*
+    ========================================
+    Convert Jalali → Gregorian
+    ========================================
+    */
+
+    let gregorianDueDate = "";
+
+
+    if (jalaliDueDate) {
+
+        gregorianDueDate =
+            jalaliToGregorian(
+                jalaliDueDate
+            );
+
+    }
+
+
+    console.log(
+        "Jalali due date:",
+        jalaliDueDate
+    );
+
+
+    console.log(
+        "Gregorian due date:",
+        gregorianDueDate
+    );
+
 
 
     /*
@@ -470,12 +656,13 @@ async function updateTodo(e) {
                         category || null,
 
                     due_date:
-                        dueDate || null
+                        gregorianDueDate || null
 
                 })
 
             }
         );
+
 
 
     const data =
@@ -486,6 +673,7 @@ async function updateTodo(e) {
         "UPDATE RESPONSE:",
         data
     );
+
 
 
     /*

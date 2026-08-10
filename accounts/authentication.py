@@ -1,4 +1,5 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 
 class CookieJWTAuthentication(JWTAuthentication):
@@ -7,11 +8,19 @@ class CookieJWTAuthentication(JWTAuthentication):
 
         header = self.get_header(request)
 
-        if header is None:
-            raw_token = request.COOKIES.get("access_token")
+        # اگر Authorization Header وجود دارد
+        # رفتار استاندارد SimpleJWT را حفظ کن
+        if header is not None:
+            return super().authenticate(request)
 
-            if raw_token is None:
-                return None
+        # اگر Header وجود ندارد، Token را از Cookie بگیر
+        raw_token = request.COOKIES.get("access_token")
+
+        # Cookie وجود ندارد
+        if raw_token is None:
+            return None
+
+        try:
 
             validated_token = self.get_validated_token(
                 raw_token
@@ -22,4 +31,8 @@ class CookieJWTAuthentication(JWTAuthentication):
                 validated_token,
             )
 
-        return super().authenticate(request)
+        except InvalidToken:
+
+            # Token منقضی یا نامعتبر است.
+            # نباید endpointهای AllowAny را خراب کند.
+            return None
