@@ -1,33 +1,36 @@
-# Python
-__pycache__/
+.git
+.github
+
+.env
+.env.*
+
+__pycache__
 *.py[cod]
-*$py.class
-*.so
+*.pyo
+
 .Python
-venv/
-env/
-ENV/
-*.egg-info/
 
-# Django
-*.log
-db.sqlite3
-/staticfiles/
-/media/
+venv
+.venv
+env
 
-# Git
-.git/
-.gitignore
+.pytest_cache
+.mypy_cache
 
-# IDE
-.vscode/
-.idea/
+.vscode
+.idea
 
-# Docker
+node_modules
+
+media/*
+staticfiles/*
+
+*.sqlite3
+
 Dockerfile
+Dockerfile.prod
 docker-compose.yml
-.dockerignore
+docker-compose.override.yml
 
-# Docs
+.gitignore
 README.md
-*.md

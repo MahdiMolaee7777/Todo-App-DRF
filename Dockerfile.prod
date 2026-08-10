@@ -1,46 +1,100 @@
 FROM python:3.11-slim
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
+
 WORKDIR /app
-RUN apt-get update && apt-get install -y \
-    postgresql-client \
-    gcc \
-    python3-dev \
-    libpq-dev \
-    curl \
+
+
+# ============================================================
+# System dependencies
+# ============================================================
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        python3-dev \
+        libpq-dev \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
 
-# دانلود باینری Tailwind در حین build (قابل اعتمادتر از دانلود دستی محلی)
-# دانلود باینری Tailwind (با retry برای مقابله با قطعی شبکه)
-RUN mkdir -p bin && \
-    curl -fL --retry 8 --retry-delay 5 --retry-all-errors --connect-timeout 30 \
-    https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 -o bin/tailwindcss && \
-    chmod +x bin/tailwindcss
+# ============================================================
+# Tailwind CSS
+# ============================================================
 
+RUN mkdir -p /app/bin \
+    && curl -fL \
+        --retry 8 \
+        --retry-delay 5 \
+        --retry-all-errors \
+        --connect-timeout 30 \
+        https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 \
+        -o /app/bin/tailwindcss \
+    && chmod +x /app/bin/tailwindcss
+
+    # ============================================================
+    # Tailwind production build
+    # ============================================================
+    
+    RUN ./bin/tailwindcss \
+        -i ./styles/input.css \
+        -o ./static/css/output.css \
+        --minify
+
+# ============================================================
+# Python dependencies
+# ============================================================
 
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
 
+# ============================================================
+# Project
+# ============================================================
 
 COPY . .
 
-# ساخت فایل نهایی و بهینه‌شده‌ی CSS از سورس جدید (بیرون از static/)
-RUN ./bin/tailwindcss -i ./styles/input.css -o ./static/css/output.css --minify
 
-# جمع‌آوری فایل‌های استاتیک برای production
+
+
+# ============================================================
+# Static / Media directories
+# ============================================================
+
 RUN mkdir -p /app/staticfiles /app/media
-ENV SECRET_KEY=build-time-placeholder-not-real \
-    DB_NAME=placeholder \
-    DB_USER=placeholder \
-    DB_PASSWORD=placeholder \
-    DB_HOST=placeholder \
-    DB_PORT=5432
+
+
+# ============================================================
+# Build-time environment variables
+#
+# Only used so Django can execute collectstatic.
+# Real production values come from Render.
+# ============================================================
+
+ENV SECRET_KEY=build-time-placeholder \
+    DEBUG=False \
+    ALLOWED_HOSTS=localhost \
+    CSRF_TRUSTED_ORIGINS=http://localhost \
+    DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
+
+
+# ============================================================
+# Collect static files
+# ============================================================
+
 RUN python manage.py collectstatic --noinput
+
+
+# ============================================================
+# Runtime
+# ============================================================
+
 EXPOSE 8000
-# اجرا با shell form تا هم && کار کنه، هم $PORT خونده بشه
-CMD python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3
+
+CMD ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3"]
