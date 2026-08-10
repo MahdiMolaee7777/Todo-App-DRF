@@ -1,27 +1,50 @@
+console.log("TODO EDIT JS LOADED");
+
+
 document.addEventListener(
     "DOMContentLoaded",
     async () => {
-
 
         console.log("TODO EDIT JS RUNNING");
         console.log("TODO_ID =", TODO_ID);
 
 
+        if (!TODO_ID) {
 
-        if (TODO_ID) {
+            console.log("TODO_ID not found");
 
-            await loadTodo();
-
+            return;
         }
 
 
+        /*
+        ========================================
+        1. Load Categories
+        ========================================
+        */
 
         await loadCategories();
 
 
+        /*
+        ========================================
+        2. Load Todo
+        ========================================
+        */
+
+        await loadTodo();
+
+
+        /*
+        ========================================
+        3. Form Submit
+        ========================================
+        */
 
         const form =
-        document.getElementById("todo-form");
+            document.getElementById(
+                "todo-form"
+            );
 
 
         if (form) {
@@ -33,244 +56,481 @@ document.addEventListener(
 
         }
 
-
     }
 );
 
 
+/*
+========================================
+LOAD TODO
+========================================
+*/
 
-
-
-async function loadTodo(){
-
+async function loadTodo() {
 
     console.log(
-        "loading todo:",
+        "Loading todo:",
         TODO_ID
     );
 
 
-
     const response =
-    await fetch(
-        `/api/todos/${TODO_ID}/`,
-        {
-            credentials:"include"
-        }
-    );
-
+        await apiRequest(
+            `/api/todos/${TODO_ID}/`
+        );
 
 
     const todo =
-    await response.json();
-
+        await response.json();
 
 
     console.log(
-        "todo data:",
+        "TODO RESPONSE:",
         todo
     );
 
 
+    if (!response.ok) {
 
-    document.getElementById("title").value =
-        todo.title;
+        console.log(
+            "TODO LOAD ERROR:",
+            todo
+        );
 
-
-
-    document.getElementById("description").value =
-        todo.description ?? "";
-
-
-
-    document.getElementById("priority").value =
-        todo.priority;
+        return;
+    }
 
 
+    /*
+    ========================================
+    Title
+    ========================================
+    */
 
-    document.getElementById("due_date").value =
-        todo.due_date ?? "";
+    const titleInput =
+        document.getElementById(
+            "title"
+        );
 
 
+    if (titleInput) {
 
-    if(todo.category){
-
-        document.getElementById("category").value =
-            todo.category.id;
+        titleInput.value =
+            todo.title || "";
 
     }
 
+
+    /*
+    ========================================
+    Description
+    ========================================
+    */
+
+    const descriptionInput =
+        document.getElementById(
+            "description"
+        );
+
+
+    if (descriptionInput) {
+
+        descriptionInput.value =
+            todo.description || "";
+
+    }
+
+
+    /*
+    ========================================
+    Priority
+    ========================================
+    */
+
+    const prioritySelect =
+        document.getElementById(
+            "priority"
+        );
+
+
+    if (prioritySelect) {
+
+        prioritySelect.value =
+            todo.priority || "medium";
+
+    }
+
+
+    /*
+    ========================================
+    Due Date
+    ========================================
+    */
+
+    const dueDateInput =
+        document.getElementById(
+            "due_date"
+        );
+
+
+    if (dueDateInput) {
+
+        dueDateInput.value =
+            todo.due_date || "";
+
+    }
+
+
+    /*
+    ========================================
+    Category
+    ========================================
+    */
+
+    const categorySelect =
+        document.getElementById(
+            "category"
+        );
+
+
+    if (!categorySelect) {
+
+        return;
+    }
+
+
+    if (todo.category) {
+
+        categorySelect.value =
+            todo.category.id;
+
+    }
+    else {
+
+        categorySelect.value =
+            "";
+
+    }
+
+
+    console.log(
+        "Selected category:",
+        categorySelect.value
+    );
 
 }
 
 
+/*
+========================================
+LOAD CATEGORIES
+========================================
+*/
 
+async function loadCategories() {
 
-
-
-
-async function loadCategories(){
-
-
-    const response =
-    await fetch(
-        "/api/categories/",
-        {
-            credentials:"include"
-        }
+    console.log(
+        "Loading categories..."
     );
 
 
+    const response =
+        await apiRequest(
+            "/api/categories/"
+        );
+
+
     const data =
-    await response.json();
+        await response.json();
 
 
-    console.log("categories response:", data);
+    console.log(
+        "CATEGORIES RESPONSE:",
+        data
+    );
 
 
+    if (!response.ok) {
 
-    if(!response.ok){
+        console.log(
+            "CATEGORY LOAD ERROR:",
+            data
+        );
 
-        console.log("Category error:", data);
         return;
-
     }
 
 
+    /*
+    ========================================
+    Handle DRF pagination
+    ========================================
+    */
 
     let categories = [];
 
 
-    if(Array.isArray(data)){
+    if (Array.isArray(data)) {
 
         categories = data;
 
     }
-    else if(Array.isArray(data.results)){
+    else if (
+        Array.isArray(data.results)
+    ) {
 
-        categories = data.results;
+        categories =
+            data.results;
 
     }
-    else{
+    else {
 
-        console.log("Unexpected categories format:", data);
+        console.log(
+            "Unexpected categories format:",
+            data
+        );
+
         return;
-
     }
 
 
+    /*
+    ========================================
+    Select
+    ========================================
+    */
 
     const select =
-    document.getElementById("category");
+        document.getElementById(
+            "category"
+        );
 
+
+    if (!select) {
+
+        console.log(
+            "Category select not found"
+        );
+
+        return;
+    }
+
+
+    /*
+    ========================================
+    Clear old options
+    ========================================
+    */
 
     select.innerHTML = "";
 
 
+    /*
+    ========================================
+    Empty option
+    ========================================
+    */
 
-    categories.forEach(category=>{
-
-
-        const option =
-        document.createElement("option");
-
-
-        option.value =
-        category.id;
-
-
-        option.textContent =
-        category.name;
+    const emptyOption =
+        document.createElement(
+            "option"
+        );
 
 
-        select.appendChild(option);
+    emptyOption.value = "";
 
 
-    });
+    emptyOption.textContent =
+        "بدون دسته‌بندی";
 
+
+    select.appendChild(
+        emptyOption
+    );
+
+
+    /*
+    ========================================
+    Add categories
+    ========================================
+    */
+
+    categories.forEach(
+        category => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                category.id;
+
+
+            option.textContent =
+                category.name;
+
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+
+    console.log(
+        "Categories loaded:",
+        categories
+    );
 
 }
 
 
+/*
+========================================
+UPDATE TODO
+========================================
+*/
 
-
-
-
-
-async function updateTodo(e){
-
+async function updateTodo(e) {
 
     e.preventDefault();
 
 
-
-    const response =
-    await fetch(
-
-        `/api/todos/${TODO_ID}/`,
-
-        {
-
-            method:"PATCH",
-
-
-            headers:{
-
-                "Content-Type":"application/json"
-
-            },
-
-
-            credentials:"include",
-
-
-            body:JSON.stringify({
-
-                title:
-                document.getElementById("title").value,
-
-
-                description:
-                document.getElementById("description").value,
-
-
-                priority:
-                document.getElementById("priority").value,
-
-
-                category:
-                document.getElementById("category").value || null,
-
-
-                due_date:
-                document.getElementById("due_date").value || null
-
-
-            })
-
-        }
-
+    console.log(
+        "Updating todo:",
+        TODO_ID
     );
 
 
-
-    if(response.ok){
-
-
-        window.location.href =
-        "/todos/";
+    const title =
+        document.getElementById(
+            "title"
+        ).value;
 
 
-    }
-    else{
+    const description =
+        document.getElementById(
+            "description"
+        ).value;
 
 
-        console.log(
-            await response.json()
+    const priority =
+        document.getElementById(
+            "priority"
+        ).value;
+
+
+    const category =
+        document.getElementById(
+            "category"
+        ).value;
+
+
+    const dueDate =
+        document.getElementById(
+            "due_date"
+        ).value;
+
+
+    /*
+    ========================================
+    PATCH Request
+    ========================================
+    */
+
+    const response =
+        await apiRequest(
+            `/api/todos/${TODO_ID}/`,
+            {
+
+                method: "PATCH",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json"
+
+                },
+
+                body: JSON.stringify({
+
+                    title:
+                        title,
+
+                    description:
+                        description,
+
+                    priority:
+                        priority,
+
+                    category:
+                        category || null,
+
+                    due_date:
+                        dueDate || null
+
+                })
+
+            }
         );
 
 
-    }
+    const data =
+        await response.json();
 
+
+    console.log(
+        "UPDATE RESPONSE:",
+        data
+    );
+
+
+    /*
+    ========================================
+    Success
+    ========================================
+    */
+
+    if (response.ok) {
+
+        console.log(
+            "TODO UPDATED SUCCESSFULLY"
+        );
+
+
+        window.location.href =
+            "/todos/";
+
+    }
+    else {
+
+        console.log(
+            "TODO UPDATE ERROR:",
+            data
+        );
+
+
+        const errorBox =
+            document.getElementById(
+                "error-box"
+            );
+
+
+        if (errorBox) {
+
+            errorBox.classList.remove(
+                "hidden"
+            );
+
+
+            errorBox.textContent =
+                "خطا در ویرایش کار.";
+
+        }
+
+    }
 
 }

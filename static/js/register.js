@@ -72,7 +72,7 @@ async function registerUser(e) {
                 },
 
 
-                credentials: "include",
+               
 
 
                 body: JSON.stringify({

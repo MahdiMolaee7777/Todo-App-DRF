@@ -62,6 +62,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class LoginSerializer(TokenObtainPairSerializer):
 
+
     username_field = "email"
 
     @classmethod
@@ -71,25 +72,34 @@ class LoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
 
         email = attrs.get("email")
+        password = attrs.get("password")
 
         user = User.objects.filter(
             email=email
         ).first()
 
+        # ایمیل وجود ندارد
         if user is None:
             raise AuthenticationFailed(
-                "Invalid email or password."
+                "ایمیل یا رمز عبور اشتباه است."
             )
 
-        if user and not user.is_active:
-
+        # ایمیل تأیید نشده
+        if not user.is_active:
             raise AuthenticationFailed(
                 {
                     "code": "email_not_verified",
-                    "detail": "Email is not verified. Please check your inbox."
+                    "detail": "ایمیل شما تأیید نشده است. لطفاً ایمیل خود را بررسی کنید."
                 }
             )
 
+        # رمز عبور اشتباه است
+        if not user.check_password(password):
+            raise AuthenticationFailed(
+                "ایمیل یا رمز عبور اشتباه است."
+            )
+
+        # ساخت Access و Refresh Token
         data = super().validate(attrs)
 
         data["user"] = UserSerializer(
@@ -97,6 +107,8 @@ class LoginSerializer(TokenObtainPairSerializer):
         ).data
 
         return data
+
+
 
 
 class UpdateProfileSerializer(serializers.ModelSerializer):

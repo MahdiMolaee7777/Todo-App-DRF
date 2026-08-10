@@ -55,7 +55,7 @@ def send_password_reset_email(request, user):
     uid = user.pk
 
     path = reverse(
-        "accounts:reset-password",
+        "pages:reset-password",
         kwargs={
             "uid": uid,
             "token": token,

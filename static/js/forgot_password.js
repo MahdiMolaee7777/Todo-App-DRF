@@ -64,8 +64,11 @@ async function forgotPassword(e) {
 
 
 
-    const data =
-        await response.json();
+    const data =await response.json();
+
+    console.log("FORGOT PASSWORD STATUS:", response.status);
+    console.log("FORGOT PASSWORD DATA:", data);
+    
 
 
 

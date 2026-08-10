@@ -17,44 +17,32 @@ from .services import send_password_reset_email
 from .services import send_verification_email
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenRefreshView
-
-
+from rest_framework import generics, permissions
 
 
 
 
 
 class RegisterView(generics.CreateAPIView):
-
     queryset = User.objects.all()
-
     serializer_class = RegisterSerializer
-
+    permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
 
-        serializer = self.get_serializer(
-            data=request.data
-        )
-
-        serializer.is_valid(
-            raise_exception=True
-        )
+        serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
 
-
-        # ارسال ایمیل تایید
-        send_verification_email(
-            request,
-            user
-        )
-
+        send_verification_email(request, user)
 
         return Response(
             {
                 "detail": "Registration successful. Please verify your email.",
-                "redirect_url": reverse("pages:verify-email-sent"),
+                "redirect_url": reverse(
+                    "pages:verify-email-sent"
+                ),
             },
             status=status.HTTP_201_CREATED,
         )

@@ -281,6 +281,8 @@
 
 {% block extra_js %}
 
+<script src="{% static 'js/api-client.js' %}"></script>
+
 <script>
 const TODO_ID = {{ todo_id }};
 console.log("ID:", TODO_ID);
