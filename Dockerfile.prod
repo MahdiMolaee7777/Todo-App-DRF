@@ -22,7 +22,10 @@ RUN apt-get update \
 
 
 # ============================================================
-# Tailwind CSS
+# Tailwind CSS binary
+#
+# این لایه را قبل از COPY پروژه گذاشتیم تا Docker cache
+# بتواند آن را در buildهای بعدی reuse کند.
 # ============================================================
 
 RUN mkdir -p /app/bin \
@@ -35,17 +38,13 @@ RUN mkdir -p /app/bin \
         -o /app/bin/tailwindcss \
     && chmod +x /app/bin/tailwindcss
 
-    # ============================================================
-    # Tailwind production build
-    # ============================================================
-    
-    RUN ./bin/tailwindcss \
-        -i ./styles/input.css \
-        -o ./static/css/output.css \
-        --minify
 
 # ============================================================
 # Python dependencies
+#
+# فقط requirements.txt را ابتدا COPY می‌کنیم.
+# بنابراین اگر فقط کد پروژه تغییر کند، این لایه cache می‌شود.
+# اگر requirements.txt تغییر کند، pip دوباره اجرا می‌شود.
 # ============================================================
 
 COPY requirements.txt .
@@ -61,6 +60,17 @@ RUN pip install --upgrade pip \
 COPY . .
 
 
+# ============================================================
+# Tailwind production build
+#
+# اینجا پروژه قبلاً COPY شده، بنابراین
+# styles/input.css وجود دارد.
+# ============================================================
+
+RUN ./bin/tailwindcss \
+    -i ./styles/input.css \
+    -o ./static/css/output.css \
+    --minify
 
 
 # ============================================================
@@ -73,8 +83,9 @@ RUN mkdir -p /app/staticfiles /app/media
 # ============================================================
 # Build-time environment variables
 #
-# Only used so Django can execute collectstatic.
-# Real production values come from Render.
+# فقط برای اینکه Django هنگام collectstatic
+# بدون environmentهای واقعی Render اجرا شود.
+# مقادیر واقعی در Render Environment Variables قرار می‌گیرند.
 # ============================================================
 
 ENV SECRET_KEY=build-time-placeholder \
@@ -96,5 +107,6 @@ RUN python manage.py collectstatic --noinput
 # ============================================================
 
 EXPOSE 8000
+
 
 CMD ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3"]
