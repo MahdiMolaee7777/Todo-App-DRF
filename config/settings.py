@@ -322,7 +322,10 @@ AUTH_USER_MODEL = "accounts.User"
 # ============================================================
 # EMAIL
 # ============================================================
-RESEND_API_KEY = config("RESEND_API_KEY")
+RESEND_API_KEY = config(
+    "RESEND_API_KEY",
+    default="",
+)
 
 DEFAULT_FROM_EMAIL = config(
     "DEFAULT_FROM_EMAIL",
