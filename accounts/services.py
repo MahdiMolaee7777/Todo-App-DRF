@@ -1,10 +1,13 @@
 from django.conf import settings
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core.mail import send_mail
 from django.urls import reverse
+import resend
 
 
 token_generator = PasswordResetTokenGenerator()
+
+
+resend.api_key = settings.RESEND_API_KEY
 
 
 def send_verification_email(request, user):
@@ -23,34 +26,29 @@ def send_verification_email(request, user):
 
     link = request.build_absolute_uri(path)
 
+    resend.Emails.send(
+        {
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": [user.email],
+            "subject": "Verify Email",
+            "html": f"""
+                <h2>Hello {user.first_name or user.email}</h2>
 
-    send_mail(
-        subject="Verify Email",
+                <p>Please verify your email by clicking the link below:</p>
 
-        message=f"""
-Hello {user.first_name or user.email}
-
-Please verify your email by clicking the link below:
-
-{link}
-""",
-
-        from_email=settings.DEFAULT_FROM_EMAIL,
-
-        recipient_list=[
-            user.email
-        ],
-
-        fail_silently=False,
+                <p>
+                    <a href="{link}">
+                        Verify Email
+                    </a>
+                </p>
+            """,
+        }
     )
-
 
 
 def send_password_reset_email(request, user):
 
-    token = token_generator.make_token(
-        user
-    )
+    token = token_generator.make_token(user)
 
     uid = user.pk
 
@@ -62,26 +60,25 @@ def send_password_reset_email(request, user):
         }
     )
 
-    link = request.build_absolute_uri(
-        path
-    )
+    link = request.build_absolute_uri(path)
 
-    send_mail(
-        subject="Reset Password",
+    resend.Emails.send(
+        {
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": [user.email],
+            "subject": "Reset Password",
+            "html": f"""
+                <h2>Hello {user.first_name or user.email}</h2>
 
-        message=f"""
-Hello {user.first_name or user.email}
+                <p>
+                    Click the link below to reset your password:
+                </p>
 
-Click the link below to reset your password:
-
-{link}
-""",
-
-        from_email=settings.DEFAULT_FROM_EMAIL,
-
-        recipient_list=[
-            user.email
-        ],
-
-        fail_silently=False,
+                <p>
+                    <a href="{link}">
+                        Reset Password
+                    </a>
+                </p>
+            """,
+        }
     )
