@@ -23,29 +23,46 @@ from rest_framework import generics, permissions
 
 
 
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
+class RegisterSerializer(serializers.ModelSerializer):
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    password = serializers.CharField(
+        write_only=True,
+        min_length=8
+    )
 
-        serializer.is_valid(raise_exception=True)
+    class Meta:
+        model = User
+        fields = [
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+        ]
 
-        user = serializer.save()
-
-        send_verification_email(request, user)
-
-        return Response(
-            {
-                "detail": "Registration successful. Please verify your email.",
-                "redirect_url": reverse(
-                    "pages:verify-email-sent"
-                ),
-            },
-            status=status.HTTP_201_CREATED,
+    def validate_email(self, value):
+        print("REGISTER EMAIL:", repr(value))
+        print("USER COUNT:", User.objects.count())
+        print(
+            "EMAIL EXISTS:",
+            User.objects.filter(
+                email__iexact=value
+            ).exists()
         )
+
+        return value
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            email=validated_data["email"],
+            password=validated_data["password"],
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
+        )
+
+        user.is_active = False
+        user.save()
+
+        return user
 
 class VerifyEmailView(APIView):
 
