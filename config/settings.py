@@ -360,6 +360,7 @@ DEFAULT_FROM_EMAIL = config(
     default="",
 )
 
+EMAIL_TIMEOUT = 10
 
 # ============================================================
 # CSRF
