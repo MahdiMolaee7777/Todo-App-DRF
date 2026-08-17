@@ -12,6 +12,7 @@ User = get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+
     password = serializers.CharField(
         write_only=True,
         min_length=8
@@ -26,8 +27,19 @@ class RegisterSerializer(serializers.ModelSerializer):
             "last_name",
         ]
 
-    def create(self, validated_data):
+    def validate_email(self, value):
+        print("REGISTER EMAIL:", repr(value))
+        print("USER COUNT:", User.objects.count())
+        print(
+            "EMAIL EXISTS:",
+            User.objects.filter(
+                email__iexact=value
+            ).exists()
+        )
 
+        return value
+
+    def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data["email"],
             password=validated_data["password"],
@@ -39,6 +51,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
 
 
 
