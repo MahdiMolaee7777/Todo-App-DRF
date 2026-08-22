@@ -106,6 +106,10 @@ async function registerUser(e) {
 
 
     console.log("Register response:", data);
+    console.log(
+        "REGISTER ERRORS:",
+        JSON.stringify(data.errors, null, 2)
+    );
 
 
 
