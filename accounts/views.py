@@ -530,3 +530,33 @@ class DebugUserView(APIView):
             "email": user.email,
             "is_active": user.is_active,
         })
+
+class DebugDeleteUserView(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def delete(self, request):
+
+        email = request.query_params.get("email")
+
+        if not email:
+            return Response(
+                {"detail": "email is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        deleted, _ = User.objects.filter(
+            email__iexact=email
+        ).delete()
+
+        if deleted == 0:
+            return Response(
+                {"detail": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(
+            {"detail": "User deleted successfully."},
+            status=status.HTTP_200_OK
+        )

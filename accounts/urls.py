@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView,DebugUserView
+from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView,DebugUserView,DebugDeleteUserView
 
 app_name = "accounts"
 
@@ -29,6 +29,8 @@ urlpatterns = [
     path("refresh/",RefreshView.as_view(),name="refresh",),
 
     path("debug-user/",DebugUserView.as_view()),
+
+    path("debug-delete-user/",DebugDeleteUserView.as_view(),),
 
 
 
