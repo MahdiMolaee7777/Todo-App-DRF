@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView
+from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView,DebugUserView
 
 app_name = "accounts"
 
@@ -27,6 +27,8 @@ urlpatterns = [
     path("resend-verification/",ResendVerificationEmailView.as_view(),name="resend-verification",),
 
     path("refresh/",RefreshView.as_view(),name="refresh",),
+
+    path("debug-user/",DebugUserView.as_view()),
 
 
 

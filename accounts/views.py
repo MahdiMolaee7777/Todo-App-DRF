@@ -507,3 +507,26 @@ class ResendVerificationEmailView(APIView):
             },
             status=status.HTTP_200_OK
         )
+
+
+class DebugUserView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        email = request.query_params.get("email")
+
+        user = User.objects.filter(
+            email__iexact=email
+        ).first()
+
+        if not user:
+            return Response({
+                "exists": False
+            })
+
+        return Response({
+            "exists": True,
+            "id": user.id,
+            "email": user.email,
+            "is_active": user.is_active,
+        })
