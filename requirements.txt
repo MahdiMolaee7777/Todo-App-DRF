@@ -29,4 +29,5 @@ uritemplate==4.2.0
 whitenoise==6.12.0
 dj-database-url==2.3.0
 resend
-
+cloudinary
+django-cloudinary-storage

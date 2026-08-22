@@ -48,6 +48,9 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework_simplejwt.token_blacklist",
 
+    "cloudinary",
+    "cloudinary_storage",
+
     "accounts",
     "todos",
 ]
@@ -305,7 +308,9 @@ STATICFILES_STORAGE = (
 
 MEDIA_URL = "/media/"
 
-MEDIA_ROOT = BASE_DIR / "media"
+DEFAULT_FILE_STORAGE = (
+    "cloudinary_storage.storage.MediaCloudinaryStorage"
+)
 
 
 # ============================================================
