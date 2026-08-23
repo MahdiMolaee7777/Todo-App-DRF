@@ -560,3 +560,28 @@ class DebugDeleteUserView(APIView):
             {"detail": "User deleted successfully."},
             status=status.HTTP_200_OK
         )
+
+
+class DebugDeleteOtherUsersView(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def delete(self, request):
+
+        keep_email = request.query_params.get("keep")
+
+        if not keep_email:
+            return Response(
+                {"detail": "keep email is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        deleted, _ = User.objects.exclude(
+            email__iexact=keep_email
+        ).delete()
+
+        return Response({
+            "detail": "Other users deleted.",
+            "deleted_count": deleted,
+        })
