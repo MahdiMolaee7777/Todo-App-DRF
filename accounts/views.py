@@ -18,6 +18,7 @@ from .services import send_verification_email
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework import generics, permissions
+from .google_oauth import create_google_flow
 
 
 
@@ -585,3 +586,62 @@ class DebugDeleteOtherUsersView(APIView):
             "detail": "Other users deleted.",
             "deleted_count": deleted,
         })
+
+
+class GoogleOAuthStartView(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+
+        flow = create_google_flow()
+
+        authorization_url, state = (
+            flow.authorization_url(
+                access_type="offline",
+                include_granted_scopes="true",
+                prompt="consent",
+            )
+        )
+
+        request.session["google_oauth_state"] = state
+
+        return redirect(authorization_url)
+
+
+class GoogleOAuthCallbackView(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+
+        state = request.session.get(
+            "google_oauth_state"
+        )
+
+        if not state:
+            return Response(
+                {
+                    "detail": "OAuth state not found."
+                },
+                status=400,
+            )
+
+        flow = create_google_flow()
+
+        flow.fetch_token(
+            authorization_response=request.build_absolute_uri()
+        )
+
+        credentials = flow.credentials
+
+        return Response(
+            {
+                "detail": "Google OAuth successful.",
+                "access_token": credentials.token,
+                "refresh_token": credentials.refresh_token,
+                "scopes": credentials.scopes,
+            }
+        )

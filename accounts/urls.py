@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView,DebugUserView,DebugDeleteUserView,DebugDeleteOtherUsersView
+from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView,DebugUserView,DebugDeleteUserView,DebugDeleteOtherUsersView,GoogleOAuthCallbackView,GoogleOAuthStartView
 
 app_name = "accounts"
 
@@ -33,6 +33,11 @@ urlpatterns = [
     path("debug-delete-user/",DebugDeleteUserView.as_view(),),
 
     path("debug-delete-other-users/",DebugDeleteOtherUsersView.as_view(),),
+
+    path("google/connect/",GoogleOAuthStartView.as_view(),name="google-connect",),
+
+
+    path("google/callback/",GoogleOAuthCallbackView.as_view(),name="google-callback",),
 
 
 

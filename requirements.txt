@@ -31,3 +31,8 @@ dj-database-url==2.3.0
 resend
 cloudinary
 django-cloudinary-storage
+
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
