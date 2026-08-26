@@ -597,15 +597,17 @@ class GoogleOAuthStartView(APIView):
 
         flow = create_google_flow()
 
-        authorization_url, state = (
-            flow.authorization_url(
-                access_type="offline",
-                include_granted_scopes="true",
-                prompt="consent",
-            )
+        authorization_url, state = flow.authorization_url(
+            access_type="offline",
+            include_granted_scopes="true",
+            prompt="consent",
         )
 
         request.session["google_oauth_state"] = state
+
+        request.session["google_oauth_code_verifier"] = (
+            flow.code_verifier
+        )
 
         return redirect(authorization_url)
 
@@ -621,6 +623,10 @@ class GoogleOAuthCallbackView(APIView):
             "google_oauth_state"
         )
 
+        code_verifier = request.session.get(
+            "google_oauth_code_verifier"
+        )
+
         if not state:
             return Response(
                 {
@@ -629,7 +635,18 @@ class GoogleOAuthCallbackView(APIView):
                 status=400,
             )
 
+        if not code_verifier:
+            return Response(
+                {
+                    "detail": "OAuth code verifier not found."
+                },
+                status=400,
+            )
+
         flow = create_google_flow()
+
+        flow.state = state
+        flow.code_verifier = code_verifier
 
         flow.fetch_token(
             authorization_response=request.build_absolute_uri()
