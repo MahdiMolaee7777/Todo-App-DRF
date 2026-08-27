@@ -28,14 +28,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         ]
 
     def validate_email(self, value):
-        print("REGISTER EMAIL:", repr(value))
-        print("USER COUNT:", User.objects.count())
-        print(
-            "EMAIL EXISTS:",
-            User.objects.filter(
-                email__iexact=value
-            ).exists()
-        )
+
+        if User.objects.filter(
+            email__iexact=value
+        ).exists():
+
+            raise serializers.ValidationError(
+                "این ایمیل قبلاً ثبت‌نام شده است. لطفاً وارد حساب خود شوید یا رمز عبور خود را بازیابی کنید."
+            )
 
         return value
 
