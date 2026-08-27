@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView,DebugUserView,DebugDeleteUserView,DebugDeleteOtherUsersView,GoogleOAuthCallbackView,GoogleOAuthStartView
+from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView,DebugUserView,DebugDeleteUserView,DebugDeleteOtherUsersView,GoogleOAuthCallbackView,GoogleOAuthStartView,TestGmailView
 
 app_name = "accounts"
 
@@ -38,6 +38,8 @@ urlpatterns = [
 
 
     path("google/callback/",GoogleOAuthCallbackView.as_view(),name="google-callback",),
+
+    path("test-gmail/",TestGmailView.as_view(),name="test-gmail",),
 
 
 

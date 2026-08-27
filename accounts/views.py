@@ -17,8 +17,13 @@ from .services import send_password_reset_email
 from .services import send_verification_email
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework import generics, permissions
 from .google_oauth import create_google_flow
+from .gmail_service import send_gmail_email
+from rest_framework import permissions
+
+
+
+
 
 
 
@@ -662,3 +667,35 @@ class GoogleOAuthCallbackView(APIView):
                 "scopes": credentials.scopes,
             }
         )
+
+
+class TestGmailView(APIView):
+
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+
+        try:
+            result = send_gmail_email(
+                to_email="mahdimolaee7777@gmail.com",
+                subject="Gmail API Test",
+                body="Hello! This email was sent using Gmail API."
+            )
+
+            return Response({
+                "detail": "Email sent successfully.",
+                "message_id": result.get("id"),
+            })
+
+        except Exception as e:
+
+            print("GMAIL ERROR:", repr(e))
+
+            return Response(
+                {
+                    "detail": "Failed to send email.",
+                    "error": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
