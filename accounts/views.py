@@ -20,26 +20,47 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .google_oauth import create_google_flow
 from .gmail_service import send_gmail_email
 from rest_framework import permissions
-
-
-
-
-
+from rest_framework.exceptions import ValidationError
 
 
 class RegisterView(generics.CreateAPIView):
+
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
 
-        serializer.is_valid(raise_exception=True)
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        try:
+            serializer.is_valid(
+                raise_exception=True
+            )
+
+        except ValidationError as exc:
+
+            email_errors = exc.detail.get("email")
+
+            if email_errors:
+                return Response(
+                    str(email_errors[0]),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            return Response(
+                str(exc.detail),
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = serializer.save()
 
-        send_verification_email(request, user)
+        send_verification_email(
+            request,
+            user
+        )
 
         return Response(
             {
@@ -50,6 +71,8 @@ class RegisterView(generics.CreateAPIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
 
 
 class VerifyEmailView(APIView):
