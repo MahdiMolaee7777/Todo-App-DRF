@@ -1,3 +1,4 @@
+
 console.log("REGISTER JS LOADED");
 
 
@@ -23,18 +24,13 @@ document.addEventListener(
             registerUser
         );
 
-
     }
 );
-
-
-
 
 
 async function registerUser(e) {
 
     e.preventDefault();
-
 
 
     const password =
@@ -43,7 +39,6 @@ async function registerUser(e) {
 
     const passwordConfirm =
         document.getElementById("password-confirm").value;
-
 
 
     if (password !== passwordConfirm) {
@@ -55,8 +50,6 @@ async function registerUser(e) {
     }
 
 
-
-
     const response =
         await fetch(
             "/api/accounts/register/",
@@ -64,30 +57,22 @@ async function registerUser(e) {
 
                 method: "POST",
 
-
                 headers: {
 
                     "Content-Type": "application/json"
 
                 },
 
-
-               
-
-
                 body: JSON.stringify({
 
                     email:
                         document.getElementById("email").value,
 
-
                     password:
                         password,
 
-
                     first_name:
                         document.getElementById("first_name")?.value || "",
-
 
                     last_name:
                         document.getElementById("last_name")?.value || ""
@@ -98,24 +83,17 @@ async function registerUser(e) {
         );
 
 
-
-
     const data =
         await response.json();
 
 
-
-    console.log("Register response:", data);
     console.log(
-        "REGISTER ERRORS:",
-        JSON.stringify(data.errors, null, 2)
+        "Register response:",
+        data
     );
 
 
-
-
     if (response.ok) {
-
 
         alert(
             "ثبت‌نام انجام شد. لطفاً ایمیل خود را برای تأیید حساب بررسی کنید."
@@ -124,19 +102,17 @@ async function registerUser(e) {
         window.location.href =
             data.redirect_url;
 
-
-
     }
 
     else {
 
-
         alert(
-            JSON.stringify(data)
+            typeof data === "string"
+                ? data
+                : data.detail || "ثبت‌نام با خطا مواجه شد."
         );
-
 
     }
 
-
 }
+
