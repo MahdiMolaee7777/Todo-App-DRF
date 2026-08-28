@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView,DebugUserView,DebugDeleteUserView,DebugDeleteOtherUsersView,GoogleOAuthCallbackView,GoogleOAuthStartView,TestGmailView
+from .views import RegisterView,MeView,LoginView,ChangePasswordView,LogoutView,UserInfoAPIView,ProfileView,ForgotPasswordView,ResetPasswordView,VerifyEmailView,ResendVerificationEmailView,RefreshView,GoogleOAuthCallbackView,GoogleOAuthStartView
 
 app_name = "accounts"
 
