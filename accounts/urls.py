@@ -28,18 +28,10 @@ urlpatterns = [
 
     path("refresh/",RefreshView.as_view(),name="refresh",),
 
-    path("debug-user/",DebugUserView.as_view()),
-
-    path("debug-delete-user/",DebugDeleteUserView.as_view(),),
-
-    path("debug-delete-other-users/",DebugDeleteOtherUsersView.as_view(),),
-
     path("google/connect/",GoogleOAuthStartView.as_view(),name="google-connect",),
-
 
     path("google/callback/",GoogleOAuthCallbackView.as_view(),name="google-callback",),
 
-    path("test-gmail/",TestGmailView.as_view(),name="test-gmail",),
 
 
 

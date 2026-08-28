@@ -538,82 +538,7 @@ class ResendVerificationEmailView(APIView):
         )
 
 
-class DebugUserView(APIView):
-    permission_classes = [permissions.AllowAny]
 
-    def get(self, request):
-        email = request.query_params.get("email")
-
-        user = User.objects.filter(
-            email__iexact=email
-        ).first()
-
-        if not user:
-            return Response({
-                "exists": False
-            })
-
-        return Response({
-            "exists": True,
-            "id": user.id,
-            "email": user.email,
-            "is_active": user.is_active,
-        })
-
-class DebugDeleteUserView(APIView):
-
-    authentication_classes = []
-    permission_classes = []
-
-    def delete(self, request):
-
-        email = request.query_params.get("email")
-
-        if not email:
-            return Response(
-                {"detail": "email is required."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        deleted, _ = User.objects.filter(
-            email__iexact=email
-        ).delete()
-
-        if deleted == 0:
-            return Response(
-                {"detail": "User not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        return Response(
-            {"detail": "User deleted successfully."},
-            status=status.HTTP_200_OK
-        )
-
-
-class DebugDeleteOtherUsersView(APIView):
-
-    authentication_classes = []
-    permission_classes = []
-
-    def delete(self, request):
-
-        keep_email = request.query_params.get("keep")
-
-        if not keep_email:
-            return Response(
-                {"detail": "keep email is required."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        deleted, _ = User.objects.exclude(
-            email__iexact=keep_email
-        ).delete()
-
-        return Response({
-            "detail": "Other users deleted.",
-            "deleted_count": deleted,
-        })
 
 
 class GoogleOAuthStartView(APIView):
@@ -692,33 +617,3 @@ class GoogleOAuthCallbackView(APIView):
         )
 
 
-class TestGmailView(APIView):
-
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-
-        try:
-            result = send_gmail_email(
-                to_email="mahdimolaee7777@gmail.com",
-                subject="Gmail API Test",
-                body="Hello! This email was sent using Gmail API."
-            )
-
-            return Response({
-                "detail": "Email sent successfully.",
-                "message_id": result.get("id"),
-            })
-
-        except Exception as e:
-
-            print("GMAIL ERROR:", repr(e))
-
-            return Response(
-                {
-                    "detail": "Failed to send email.",
-                    "error": str(e),
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
